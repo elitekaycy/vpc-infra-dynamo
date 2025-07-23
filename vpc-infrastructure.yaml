@@ -42,17 +42,6 @@ Parameters:
     Type: String
     Default: 123456789012.dkr.ecr.us-east-1.amazonaws.com/todo-app
 
-  AWSAccessKey:
-    Description: AWS Access Key for application authentication
-    Type: String
-    NoEcho: true
-
-  AWSSecretKey:
-    Description: AWS Secret Key for application authentication
-    Type: String
-    NoEcho: true
-
-
 Resources:
   VPC:
     Type: AWS::EC2::VPC
