@@ -460,7 +460,7 @@ Resources:
             Action:
               - sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonECSServiceRolePolicy
+        - arn:aws:iam::aws:policy/service-role/AmazonECSAutoScalingRole
 
   ECRImagePushRule:
     Type: AWS::Events::Rule
