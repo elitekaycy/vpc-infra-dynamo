@@ -28,26 +28,26 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Create S3 bucket if it doesn't exist
-        run: |
-          if ! aws s3api head-bucket --bucket $S3_BUCKET 2>/dev/null; then
-            echo "Creating S3 bucket: $S3_BUCKET"
-            aws s3api create-bucket --bucket $S3_BUCKET --region $AWS_REGION
-            
-            aws s3api put-bucket-versioning \
-              --bucket $S3_BUCKET \
-              --versioning-configuration Status=Enabled
-            
-            aws s3api put-public-access-block \
-              --bucket $S3_BUCKET \
-              --public-access-block-configuration \
-              BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
- 
-            echo "S3 bucket created successfully"
-          else
-            echo "S3 bucket $S3_BUCKET already exists"
-          fi
-
+      # - name: Create S3 bucket if it doesn't exist
+      #   run: |
+      #     if ! aws s3api head-bucket --bucket $S3_BUCKET 2>/dev/null; then
+      #       echo "Creating S3 bucket: $S3_BUCKET"
+      #       aws s3api create-bucket --bucket $S3_BUCKET --region $AWS_REGION
+      #
+      #       aws s3api put-bucket-versioning \
+      #         --bucket $S3_BUCKET \
+      #         --versioning-configuration Status=Enabled
+      #
+      #       aws s3api put-public-access-block \
+      #         --bucket $S3_BUCKET \
+      #         --public-access-block-configuration \
+      #         BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
+      #
+      #       echo "S3 bucket created successfully"
+      #     else
+      #       echo "S3 bucket $S3_BUCKET already exists"
+      #     fi
+      #
 
       - name: Create CodeDeploy bundle
         run: |
