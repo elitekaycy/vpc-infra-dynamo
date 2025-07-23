@@ -1,0 +1,60 @@
+{
+  "family": "<TASK_FAMILY>",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "<TASK_CPU>",
+  "memory": "<TASK_MEMORY>",
+  "executionRoleArn": "<EXECUTION_ROLE_ARN>",
+  "taskRoleArn": "<TASK_ROLE_ARN>",
+  "containerDefinitions": [
+    {
+      "name": "<CONTAINER_NAME>",
+      "image": "<IMAGE_URI>",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": "<CONTAINER_PORT>",
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { 
+          "name": "AWS_REGION", 
+          "value": "<AWS_REGION>" 
+        },
+        {
+          "name": "DYNAMODB_TABLE_NAME",
+          "value": "<DYNAMODB_TABLE_NAME>"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "AWS_ACCESS_KEY",
+          "valueFrom": "/todo-app/dev/aws/access_key"
+        },
+        {
+          "name": "AWS_SECRET_KEY",
+          "valueFrom": "/todo-app/dev/aws/secret_key"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "<LOG_GROUP>",
+          "awslogs-region": "<AWS_REGION>",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "curl -f http://localhost:<CONTAINER_PORT>/health || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    }
+  ]
+}
