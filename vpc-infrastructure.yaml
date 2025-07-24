@@ -40,7 +40,7 @@ Parameters:
   ECRRepositoryURI:
     Description: ECR repository URI for container images
     Type: String
-    Default: 123456789012.dkr.ecr.us-east-1.amazonaws.com/todo-app
+    Default: 205930614431.dkr.ecr.eu-central-1.amazonaws.com/todo-app
 
 Resources:
   VPC:
@@ -197,38 +197,49 @@ Resources:
         - !Ref PrivateRouteTable1
         - !Ref PrivateRouteTable2
 
-  S3VPCEndpoint:
+  S3Endpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
       VpcId: !Ref VPC
       ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
-      VpcEndpointType: Gateway
       RouteTableIds:
         - !Ref PrivateRouteTable1
         - !Ref PrivateRouteTable2
+      VpcEndpointType: Gateway
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action:
+              - "s3:PutObject"
+              - "s3:GetObject"
+              - "s3:ListBucket"
+            Resource:
+              - !Sub "arn:aws:s3:::${S3BucketName}"
+              - !Sub "arn:aws:s3:::${S3BucketName}/*"
+          - Effect: Allow
+            Principal: "*"
+            Action:
+              - "s3:GetObject"
+            Resource:
+              - !Sub "arn:aws:s3:::prod-${AWS::Region}-starport-layer-bucket/*"
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-s3-endpoint
 
   SSMVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
-      VpcId: !Ref VPC
       ServiceName: !Sub com.amazonaws.${AWS::Region}.ssm
-      VpcEndpointType: Interface
+      VpcId: !Ref VPC
       SubnetIds:
         - !Ref PrivateSubnet1
         - !Ref PrivateSubnet2
       SecurityGroupIds:
         - !Ref VPCEndpointSecurityGroup
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal: '*'
-            Action:
-              - ssm:GetParameter
-              - ssm:GetParameters
-              - ssm:GetParametersByPath
-            Resource: '*'
-
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: true
 
   ECRAPIVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
@@ -418,14 +429,20 @@ Resources:
             Command:
               - "CMD-SHELL"
               - "/bin/sh -c 'curl -f http://localhost:8080 || exit 1'"
+            Interval: 60
+            Timeout: 5
+            Retries: 3
+            StartPeriod: 120
           PortMappings:
             - ContainerPort: 8080
+              Protocol: tcp
           LogConfiguration:
             LogDriver: awslogs
             Options:
               awslogs-group: !Ref CloudWatchLogGroup
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: ecs
+              awslogs-stream-prefix: !Sub ${EnvironmentName}-ecs
               awslogs-create-group: "true"
           Environment:
             - Name: AWS_REGION
