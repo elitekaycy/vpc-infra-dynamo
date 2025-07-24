@@ -202,6 +202,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+      PrivateDnsEnabled: true
       RouteTableIds:
         - !Ref PrivateRouteTable1
         - !Ref PrivateRouteTable2
@@ -259,6 +260,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       ServiceName: !Sub com.amazonaws.${AWS::Region}.ecr.api
+      PrivateDnsEnabled: true
       VpcEndpointType: Interface
       SubnetIds:
         - !Ref PrivateSubnet1
@@ -272,6 +274,7 @@ Resources:
       VpcId: !Ref VPC
       ServiceName: !Sub com.amazonaws.${AWS::Region}.ecr.dkr
       VpcEndpointType: Interface
+      PrivateDnsEnabled: true
       SubnetIds:
         - !Ref PrivateSubnet1
         - !Ref PrivateSubnet2
@@ -284,6 +287,7 @@ Resources:
       VpcId: !Ref VPC
       ServiceName: !Sub com.amazonaws.${AWS::Region}.logs
       VpcEndpointType: Interface
+      PrivateDnsEnabled: true
       SubnetIds:
         - !Ref PrivateSubnet1
         - !Ref PrivateSubnet2
@@ -299,7 +303,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
-          SourceSecurityGroupId: !Ref ECSSecurityGroup
+          CidrIp: !Ref VpcCIDR
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName}-VPCEndpoint-SG
