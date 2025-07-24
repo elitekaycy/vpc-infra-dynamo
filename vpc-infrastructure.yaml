@@ -202,7 +202,6 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
-      PrivateDnsEnabled: true
       RouteTableIds:
         - !Ref PrivateRouteTable1
         - !Ref PrivateRouteTable2
