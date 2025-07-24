@@ -384,12 +384,8 @@ Resources:
         - ContainerName: todo-app
           ContainerPort: 8080
           TargetGroupArn: !Ref ALBTargetGroup
-      DeploymentConfiguration:
-        MaximumPercent: 200
-        MinimumHealthyPercent: 100
-        DeploymentCircuitBreaker:
-          Enable: true
-          Rollback: true
+      DeploymentController:
+        Type: CODE_DEPLOY
 
   ECSAutoScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
@@ -584,6 +580,7 @@ Resources:
     DependsOn:
       - CodeDeployRole
       - CodeDeployApplication
+      - ECSService
     Properties:
       ApplicationName: !Ref CodeDeployApplication
       DeploymentGroupName: !Sub ${EnvironmentName}-todo-deployment-group
@@ -607,9 +604,6 @@ Resources:
             TargetGroups:
               - Name: !Select [1, !Split ["/", !Select [5, !Split [":", !Ref ALBTargetGroup]]]]
               - Name: !Select [1, !Split ["/", !Select [5, !Split [":", !Ref ALBTargetGroupGreen]]]]
-      ECSServices:
-        - ClusterName: !Ref ECSCluster
-          ServiceName: !Sub ${EnvironmentName}-service
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName}-todo-deployment-group
