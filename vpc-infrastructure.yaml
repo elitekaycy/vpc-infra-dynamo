@@ -241,6 +241,19 @@ Resources:
       VpcEndpointType: Interface
       PrivateDnsEnabled: true
 
+  KMSEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.kms
+      VpcId: !Ref VPC
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: true
+
   ECRAPIVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -482,12 +495,25 @@ Resources:
   ECSAutoScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
-      MaxCapacity: 10
-      MinCapacity: 2
+      MaxCapacity: 3 
+      MinCapacity: 2 
       ResourceId: !Sub service/${ECSCluster}/${ECSService.Name}
       RoleARN: !GetAtt ECSAutoScalingRole.Arn
       ScalableDimension: ecs:service:DesiredCount
       ServiceNamespace: ecs
+
+  CPUUtilizationScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub ${EnvironmentName}-cpu-scaling
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref ECSAutoScalingTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 50
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
 
   ECSAutoScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
@@ -521,25 +547,43 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Service:
-                - ecs-tasks.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+              Service: [ecs-tasks.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      Path: /
       Policies:
-        - PolicyName: SSMParameterStorePolicy
+        - PolicyName: todo-ecs-execution-policy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
-                  - ssm:GetParameter
-                  - ssm:GetParameters
-                  - ssm:GetParametersByPath
+                  - 'ecr:GetAuthorizationToken'
+                  - 'ecr:BatchCheckLayerAvailability'
+                  - 'ecr:GetDownloadUrlForLayer'
+                  - 'ecr:BatchGetImage'
+                  - 'ecr:DescribeRepositories'
+                  - 'ecr:ListImages'
+                  - 'ecr:DescribeImages'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                  - 'logs:CreateLogGroup'
+                  - 'logs:DescribeLogStreams'
+                Resource: '*'
+        - PolicyName: AllowSSMAccessForSecrets
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ssm:GetParameters'
+                  - 'ssm:GetParameter'
                 Resource:
                   - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/todo-app/dev/aws/access_key
                   - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/todo-app/dev/aws/secret_key
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-ecs-exec-role
+
 
   ECSTaskRole:
     Type: AWS::IAM::Role
@@ -549,10 +593,9 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Service:
-                - ecs-tasks.amazonaws.com
-            Action:
-              - sts:AssumeRole
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Path: /
       Policies:
         - PolicyName: DynamoDBAccessPolicy
           PolicyDocument:
@@ -567,6 +610,35 @@ Resources:
                   - dynamodb:Scan
                   - dynamodb:Query
                 Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/TodoTable
+        - PolicyName: todo-s3-access-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:PutObject'
+                  - 's3:GetObject'
+                  - 's3:ListBucket'
+                  - 's3:DeleteObject'
+                Resource:
+                  - !Sub arn:aws:s3:::${S3BucketName}
+                  - !Sub arn:aws:s3:::${S3BucketName}/*
+              - Effect: Allow
+                Action:
+                  - 'ssm:GetParameters'
+                  - 'ssm:GetParameter'
+                Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/todo-app/dev/aws/*
+              - Effect: Allow
+                Action:
+                  - 'ecr:GetAuthorizationToken'
+                  - 'ecr:BatchCheckLayerAvailability'
+                  - 'ecr:GetDownloadUrlForLayer'
+                  - 'ecr:BatchGetImage'
+                Resource: '*'
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-task-role
 
 
   ECSAutoScalingRole:
