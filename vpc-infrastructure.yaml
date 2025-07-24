@@ -510,6 +510,19 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: SSMParameterStorePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                  - ssm:GetParametersByPath
+                Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/todo-app/dev/aws/access_key
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/todo-app/dev/aws/secret_key
 
   ECSTaskRole:
     Type: AWS::IAM::Role
