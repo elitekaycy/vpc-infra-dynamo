@@ -499,7 +499,7 @@ Resources:
     Properties:
       MaxCapacity: 3 
       MinCapacity: 2 
-      ResourceId: !Sub service/${ECSCluster}/${ECSService.Name}
+      ResourceId: !Sub service/${ECSCluster}/${EnvironmentName}-service
       RoleARN: !GetAtt ECSAutoScalingRole.Arn
       ScalableDimension: ecs:service:DesiredCount
       ServiceNamespace: ecs
@@ -767,9 +767,13 @@ Resources:
         - ServiceName: !Sub ${EnvironmentName}-service
           ClusterName: !Sub ${EnvironmentName}-cluster
       LoadBalancerInfo:
-        TargetGroupInfoList:
-          - Name: !GetAtt ALBTargetGroup.TargetGroupName
-          - Name: !GetAtt ALBTargetGroupGreen.TargetGroupName
+        TargetGroupPairInfoList:
+          - ProdTrafficRoute:
+              ListenerArns:
+                - !Ref ALBListener
+            TargetGroups:
+              - Name: !GetAtt ALBTargetGroup.TargetGroupName
+              - Name: !GetAtt ALBTargetGroupGreen.TargetGroupName
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName}-todo-deployment-group
