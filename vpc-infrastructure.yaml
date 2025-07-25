@@ -764,8 +764,8 @@ Resources:
           ActionOnTimeout: CONTINUE_DEPLOYMENT
           WaitTimeInMinutes: 0
       ECSServices:
-        - ServiceName: !Ref ECSService
-          ClusterName: !Ref ECSCluster
+        - ServiceName: !Sub ${EnvironmentName}-service
+          ClusterName: !Sub ${EnvironmentName}-cluster
       LoadBalancerInfo:
         TargetGroupInfoList:
           - Name: !GetAtt ALBTargetGroup.TargetGroupName
