@@ -783,6 +783,7 @@ Resources:
 
   ECRImagePushRule:
     Type: AWS::Events::Rule
+    DependsOn: CodePipeline
     Properties:
       Name: !Sub ${EnvironmentName}-ECR-ImagePush
       Description: Trigger CodePipeline when new ECR image is pushed
