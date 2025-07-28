@@ -1,30 +1,30 @@
 {
-  "family": "<TASK_FAMILY>",
+  "family": "TodoApp-task",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
-  "cpu": "<TASK_CPU>",
-  "memory": "<TASK_MEMORY>",
-  "executionRoleArn": "<EXECUTION_ROLE_ARN>",
-  "taskRoleArn": "<TASK_ROLE_ARN>",
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::205930614431:role/vpc-infra-ECSTaskExecutionRole-H1sBlG1AsMTX",
+  "taskRoleArn": "arn:aws:iam::205930614431:role/vpc-infra-ECSTaskRole-7tVgmLAgapsD",
   "containerDefinitions": [
     {
-      "name": "<CONTAINER_NAME>",
-      "image": "<IMAGE_URI>",
+      "name": "todo-app",
+      "image": "205930614431.dkr.ecr.eu-central-1.amazonaws.com/todo-app:latest",
       "essential": true,
       "portMappings": [
         {
-          "containerPort": "<CONTAINER_PORT>",
+          "containerPort": 8080,
           "protocol": "tcp"
         }
       ],
       "environment": [
         { 
           "name": "AWS_REGION", 
-          "value": "<AWS_REGION>" 
+          "value": "eu-central-1" 
         },
         {
           "name": "DYNAMODB_TABLE_NAME",
-          "value": "<DYNAMODB_TABLE_NAME>"
+          "value": "TodoTable"
         }
       ],
       "secrets": [
@@ -40,15 +40,15 @@
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "<LOG_GROUP>",
-          "awslogs-region": "<AWS_REGION>",
+          "awslogs-group": "/ecs/TodoApp",
+          "awslogs-region": "eu-central-1",
           "awslogs-stream-prefix": "ecs"
         }
       },
       "healthCheck": {
         "command": [
           "CMD-SHELL",
-          "curl -f http://localhost:<CONTAINER_PORT>/health || exit 1"
+          "curl -f http://localhost:8080 || exit 1"
         ],
         "interval": 30,
         "timeout": 5,

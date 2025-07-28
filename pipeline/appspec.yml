@@ -3,7 +3,7 @@ Resources:
   - TargetService:
       Type: AWS::ECS::Service
       Properties:
-        TaskDefinition: <TASK_DEFINITION>     
+        TaskDefinition: arn:aws:ecs:eu-central-1:205930614431:task-definition/TodoApp-task:17    
         LoadBalancerInfo:
           ContainerName: todo-app
           ContainerPort: 8080
